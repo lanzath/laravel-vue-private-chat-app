@@ -15,6 +15,7 @@
                             @click.prevent="openChat(friend)"
                         >
                             {{ friend.name }}
+                            <i class="fas fa-circle float-right" v-if="friend.online"></i>
                         </li>
                     </ul>
                 </div>
@@ -57,11 +58,7 @@ export default {
         openChat(friend) {
             if(friend.session) {
                 // Close last chat for each new chat opened.
-                this.friends.forEach(friend => {
-                    if(friend.session) {
-                        friend.session.open = false
-                    }
-                });
+                this.friends.forEach(friend => friend.session ? friend.session.open = false : '');
 
                 friend.session.open = true;
             } else {
@@ -78,6 +75,30 @@ export default {
 
     created() {
         this.getFriends();
+
+        Echo.channel('Chat').listen('SessionEvent', event => {
+            let friend =  this.friends.find(friend => friend.id === event.session_by);
+            friend.session = event.session;
+        });
+
+        // Join user to presence channel and show whether user is online
+        Echo.join('Chat')
+            .here((users) => {
+                console.log(users);
+                this.friends.forEach(friend => {
+                    users.forEach(user => {
+                        if(user.id == friend.id) {
+                            friend.online = true
+                        }
+                    })
+                });
+            })
+            .joining((user) => {
+                this.friends.forEach(friend => user.id == friend.id ? friend.online = true : '')
+            })
+            .leaving((user) => {
+                this.friends.forEach(friend => user.id == friend.id ? friend.online = false : '')
+            })
     }
 }
 </script>
@@ -90,5 +111,8 @@ export default {
      transform: scale(1.05);
      color: rgba(0, 0, 0, 1);
      transition: ease-in-out 0.3s;
+ }
+ .fa-circle {
+     color: rgb(132, 252, 132);
  }
 </style>
