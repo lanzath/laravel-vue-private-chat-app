@@ -35,7 +35,7 @@ class HomeController extends Controller
      *
      * @return AnonymousResourceCollection
      */
-    public function getUsers(): AnonymousResourceCollection
+    private function getUsers(): AnonymousResourceCollection
     {
         return UserResource::collection(User::where('id', '!=', auth()->id())->get());
     }
