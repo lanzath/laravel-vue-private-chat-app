@@ -8,16 +8,26 @@
                     </div>
 
                     <ul class="list-group">
-                        <li class="list-group-item">User 1</li>
-                        <li class="list-group-item">User 2</li>
-                        <li class="list-group-item">User 3</li>
-                        <li class="list-group-item">User 4</li>
+                        <li
+                            class="list-group-item"
+                            v-for="friend in friends"
+                            :key="friend.id"
+                            @click.prevent="openChat(friend)"
+                        >
+                            {{ friend.name }}
+                        </li>
                     </ul>
                 </div>
             </div>
             <div class="col-md-9">
-                <!-- Whenever close event from child component is emmited, call close method. -->
-                <message-component v-if="open" @close="close"></message-component>
+                <span v-for="friend in friends" :key="friend.id" v-if="friend.session">
+                    <!-- Whenever close event from child component is emmited, call close method. -->
+                    <message-component
+                        v-if="friend.session.open"
+                        @close="close(friend)"
+                        :friend=friend
+                    ></message-component>
+                </span>
             </div>
         </div>
     </div>
@@ -31,18 +41,54 @@ export default {
 
     data() {
         return {
-            open: true,
+            friends: [],
         }
     },
 
     methods: {
-        close() {
-            this.open = false;
+        close(friend) {
+            friend.session.open = false;
+        },
+
+        getFriends() {
+            axios.post('/getFriends').then(response => this.friends = response.data);
+        },
+
+        openChat(friend) {
+            if(friend.session) {
+                // Close last chat for each new chat opened.
+                this.friends.forEach(friend => {
+                    if(friend.session) {
+                        friend.session.open = false
+                    }
+                });
+
+                friend.session.open = true;
+            } else {
+                this.createSession(friend);
+            }
+        },
+
+        createSession(friend) {
+            axios.post('/session/create', {friend_id: friend.id}).then(response => {
+                (friend.session = response.data), (friend.session.open = true);
+            });
         }
     },
 
-    mounted() {
-        console.log('Component mounted.')
+    created() {
+        this.getFriends();
     }
 }
 </script>
+<style scoped>
+.list-group-item {
+    color: rgba(0, 0, 0, 0.7);
+    cursor: pointer;
+ }
+ .list-group-item:hover {
+     transform: scale(1.05);
+     color: rgba(0, 0, 0, 1);
+     transition: ease-in-out 0.3s;
+ }
+</style>

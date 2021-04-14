@@ -2,7 +2,7 @@
     <div class="card card-default chat-box">
         <div class="card-header">
             <b :class="{'text-danger':blocked}">
-                User Name
+                {{ friend.name }}
                 <span v-if="blocked">(blocked)</span>
             </b>
             <i class="fas fa-times float-right" @click.prevent="close"></i>
@@ -38,6 +38,7 @@
 
 <script>
 export default {
+    props: ['friend'],
     data() {
         return {
             chats: [],
