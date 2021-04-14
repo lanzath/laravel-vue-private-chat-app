@@ -32,8 +32,10 @@ class UserResource extends JsonResource
      */
     private function sessionDetails(int $id)
     {
-        return Session::whereIn('user1_id', [auth()->id(), $id])
+        $session = Session::whereIn('user1_id', [auth()->id(), $id])
             ->whereIn('user2_id', [auth()->id(), $id])
             ->first();
+
+        return new SessionResource($session);
     }
 }
