@@ -10,6 +10,12 @@ class Chat extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = ['message_id', 'session_id', 'user_id', 'type'];
 
 
 
