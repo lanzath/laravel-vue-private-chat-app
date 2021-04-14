@@ -16,3 +16,8 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
+
+// Presence channel to return who's connected to this channel.
+Broadcast::channel('Chat', function ($user) {
+    return $user;
+});
