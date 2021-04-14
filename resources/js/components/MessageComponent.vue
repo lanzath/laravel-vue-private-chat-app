@@ -18,7 +18,7 @@
             </div>
         </div>
         <div class="card-body" v-chat-scroll>
-            <p class="card-text" v-for="chat in chats" :key="chat.message">
+            <p class="card-text" :class="{'text-right':chat.type == 'sender'}" v-for="chat in chats" :key="chat.id">
                 {{ chat.message }}
             </p>
         </div>
@@ -43,14 +43,28 @@ export default {
         return {
             chats: [],
             blocked: false,
-            message: '',
+            message: null,
         }
     },
 
     methods: {
         send() {
-            this.chats.push({message: this.message});
-            this.message = '';
+            if(this.message) {
+                this.pushToChats(this.message);
+                axios.post(`/session/${this.friend.session.id}/send`, {
+                    content: this.message,
+                    to_user: this.friend.id,
+                });
+                this.message = null;
+            }
+        },
+
+        pushToChats(message) {
+            this.chats.push({
+                message: message,
+                type: 'sender',
+                sent_at: 'Just Now'
+            });
         },
 
         close() {
@@ -63,14 +77,17 @@ export default {
 
         toggleBlock() {
             this.blocked = !this.blocked;
+        },
+
+        getAllMessages() {
+            axios
+            .post(`/session/${this.friend.session.id}/chats`)
+            .then(response => this.chats = response.data);
         }
     },
 
     created() {
-        this.chats.push(
-            {message: 'hey'},
-            {message: 'how are you?'},
-        );
+        this.getAllMessages();
     }
 };
 </script>
