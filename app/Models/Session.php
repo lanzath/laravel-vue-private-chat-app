@@ -11,6 +11,12 @@ class Session extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = ['user1_id', 'user2_id'];
 
 
     //-------------------------------------------
