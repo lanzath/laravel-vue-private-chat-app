@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Session;
+use App\Events\SessionEvent;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Http\Resources\SessionResource;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\Session;
 
 class SessionController extends Controller
 {
@@ -18,11 +19,15 @@ class SessionController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $session = Session::create([
+        $newSession = Session::create([
             'user1_id' => auth()->id(),
             'user2_id' => $request->friend_id,
         ]);
 
-        return response()->json(new SessionResource($session), Response::HTTP_CREATED);
+        $session = new SessionResource($newSession);
+
+        broadcast(new SessionEvent($session, auth()->id()));
+
+        return response()->json($session, Response::HTTP_CREATED);
     }
 }
