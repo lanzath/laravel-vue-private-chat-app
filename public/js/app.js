@@ -2052,7 +2052,16 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   created: function created() {
+    var _this2 = this;
+
     this.getAllMessages();
+    Echo["private"]("Chat.".concat(this.friend.session.id)).listen('PrivateChatEvent', function (event) {
+      _this2.chats.push({
+        message: event.content,
+        type: 'received',
+        sent_at: 'Just now'
+      });
+    });
   }
 });
 
