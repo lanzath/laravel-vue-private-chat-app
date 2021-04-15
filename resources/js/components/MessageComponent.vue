@@ -88,6 +88,12 @@ export default {
 
     created() {
         this.getAllMessages();
+
+        Echo
+            .private(`Chat.${this.friend.session.id}`)
+            .listen('PrivateChatEvent', event => {
+                this.chats.push({ message: event.content, type: 'received', sent_at: 'Just now' })
+            })
     }
 };
 </script>
