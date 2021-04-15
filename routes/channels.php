@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Broadcast;
+use App\Models\Session;
 
 /*
 |--------------------------------------------------------------------------
@@ -20,4 +21,9 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
 // Presence channel to return who's connected to this channel.
 Broadcast::channel('Chat', function ($user) {
     return $user;
+});
+
+// Private channel for private chat event listening
+Broadcast::channel('Chat.{session}', function ($user, Session $session) {
+    return $user->id == $session->user1_id || $user->id == $session->user2_id;
 });
