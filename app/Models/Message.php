@@ -32,11 +32,11 @@ class Message extends Model
      * Store data for message's sender on Chat table.
      *
      * @param  int  $session_id
-     * @return void
+     * @return Model
      */
-    public function createForSend(int $session_id): void
+    public function createForSend(int $session_id): Model
     {
-        $this->chats()->create([
+        return $this->chats()->create([
             'session_id' => $session_id,
             'user_id' => auth()->id(),
             'type' => 'sender'
@@ -48,11 +48,11 @@ class Message extends Model
      *
      * @param  int  $session_id
      * @param  int  $to_user
-     * @return void
+     * @return Model
      */
-    public function createForReceive(int $session_id, int $to_user): void
+    public function createForReceive(int $session_id, int $to_user): Model
     {
-        $this->chats()->create([
+        return $this->chats()->create([
             'session_id' => $session_id,
             'user_id' => $to_user,
             'type' => 'receiver'
