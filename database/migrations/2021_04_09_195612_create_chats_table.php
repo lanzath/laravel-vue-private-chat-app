@@ -18,6 +18,7 @@ class CreateChatsTable extends Migration
             $table->foreignId('message_id')->constrained('messages');
             $table->foreignId('session_id')->constrained('sessions');
             $table->foreignId('user_id')->constrained('users');
+            $table->dateTime('read_at')->nullable();
             $table->enum('type', ['sender', 'receiver']);
             $table->timestamps();
         });
