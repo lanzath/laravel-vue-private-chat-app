@@ -25,5 +25,6 @@ Broadcast::channel('Chat', function ($user) {
 
 // Private channel for private chat event listening
 Broadcast::channel('Chat.{session}', function ($user, Session $session) {
+    // Only authorize the 2 users in a chat
     return $user->id == $session->user1_id || $user->id == $session->user2_id;
 });

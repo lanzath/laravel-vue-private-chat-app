@@ -20,6 +20,7 @@ class ChatController extends Controller
      */
     public function send(Session $session, Request $request): JsonResponse
     {
+        // Create message through session relationship
         $message = $session->messages()->create(['content' => $request->content]);
 
         $chat = $message->createForSend($session->id);
