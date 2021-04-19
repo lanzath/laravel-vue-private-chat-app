@@ -44,4 +44,21 @@ class ChatController extends Controller
 
         return response()->json(ChatResource::collection($chats), Response::HTTP_OK);
     }
+
+    /**
+     * Stores in database the datetime that message have been read.
+     *
+     * @param  Session  $session
+     * @return void
+     */
+    public function read(Session $session): void
+    {
+        $chats = $session->chats->where('read_at', null)
+            ->where('type', 'sender')
+            ->where('user_id', '!=', auth()->id());
+
+        foreach ($chats as $chat) {
+            $chat->update(['read_at' => now()]);
+        }
+    }
 }

@@ -18,6 +18,11 @@ class SessionResource extends JsonResource
             'id' => $this->id,
             'open' => false,    //session initially is closed
             'users' => [$this->user1_id, $this->user2_id],
+            'unreadCount' => $this->chats
+                ->where('read_at', null)
+                ->where('type', 'sender')
+                ->where('user_id', '!=', auth()->id())
+                ->count(),
         ];
     }
 }

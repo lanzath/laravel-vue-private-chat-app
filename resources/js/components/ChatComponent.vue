@@ -15,6 +15,10 @@
                             @click.prevent="openChat(friend)"
                         >
                             {{ friend.name }}
+                            <span
+                                class="text-danger"
+                                v-if="friend.session && (friend.session.unreadCount > 0)"
+                            >{{ friend.session.unreadCount }}</span>
                             <i class="fas fa-circle float-right" v-if="friend.online"></i>
                         </li>
                     </ul>
@@ -52,15 +56,22 @@ export default {
         },
 
         getFriends() {
-            axios.post('/getFriends').then(response => this.friends = response.data);
+            axios.post('/getFriends').then(response => {
+                this.friends = response.data;
+
+                this.friends.forEach(
+                    friend => (friend.session ? this.listenForEverySession(friend) : '')
+                );
+            });
         },
 
         openChat(friend) {
-            if(friend.session) {
+            if (friend.session) {
                 // Close last chat for each new chat opened.
                 this.friends.forEach(friend => friend.session ? friend.session.open = false : '');
 
                 friend.session.open = true;
+                friend.session.unreadCount = 0;
             } else {
                 this.createSession(friend);
             }
@@ -70,6 +81,14 @@ export default {
             axios.post('/session/create', {friend_id: friend.id}).then(response => {
                 (friend.session = response.data), (friend.session.open = true);
             });
+        },
+
+        listenForEverySession(friend) {
+            Echo
+                .private(`Chat.${friend.session.id}`)
+                .listen('PrivateChatEvent',
+                    event => (friend.session.open ? '' : friend.session.unreadCount++)
+                );
         }
     },
 
@@ -79,15 +98,15 @@ export default {
         Echo.channel('Chat').listen('SessionEvent', event => {
             let friend =  this.friends.find(friend => friend.id === event.session_by);
             friend.session = event.session;
+            this.listenForEverySession(friend);
         });
 
         // Join user to presence channel and show whether user is online
         Echo.join('Chat')
             .here((users) => {
-                console.log(users);
                 this.friends.forEach(friend => {
                     users.forEach(user => {
-                        if(user.id == friend.id) {
+                        if (user.id == friend.id) {
                             friend.online = true
                         }
                     })

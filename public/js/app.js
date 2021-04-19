@@ -1882,6 +1882,10 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
+//
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   components: {
@@ -1900,7 +1904,11 @@ __webpack_require__.r(__webpack_exports__);
       var _this = this;
 
       axios.post('/getFriends').then(function (response) {
-        return _this.friends = response.data;
+        _this.friends = response.data;
+
+        _this.friends.forEach(function (friend) {
+          return friend.session ? _this.listenForEverySession(friend) : '';
+        });
       });
     },
     openChat: function openChat(friend) {
@@ -1910,6 +1918,7 @@ __webpack_require__.r(__webpack_exports__);
           return friend.session ? friend.session.open = false : '';
         });
         friend.session.open = true;
+        friend.session.unreadCount = 0;
       } else {
         this.createSession(friend);
       }
@@ -1919,6 +1928,11 @@ __webpack_require__.r(__webpack_exports__);
         friend_id: friend.id
       }).then(function (response) {
         friend.session = response.data, friend.session.open = true;
+      });
+    },
+    listenForEverySession: function listenForEverySession(friend) {
+      Echo["private"]("Chat.".concat(friend.session.id)).listen('PrivateChatEvent', function (event) {
+        return friend.session.open ? '' : friend.session.unreadCount++;
       });
     }
   },
@@ -1932,11 +1946,11 @@ __webpack_require__.r(__webpack_exports__);
       });
 
       friend.session = event.session;
+
+      _this2.listenForEverySession(friend);
     }); // Join user to presence channel and show whether user is online
 
     Echo.join('Chat').here(function (users) {
-      console.log(users);
-
       _this2.friends.forEach(function (friend) {
         users.forEach(function (user) {
           if (user.id == friend.id) {
@@ -2049,13 +2063,19 @@ __webpack_require__.r(__webpack_exports__);
       axios.post("/session/".concat(this.friend.session.id, "/chats")).then(function (response) {
         return _this.chats = response.data;
       });
+    },
+    read: function read() {
+      axios.post("/session/".concat(this.friend.session.id, "/read"));
     }
   },
   created: function created() {
     var _this2 = this;
 
+    this.read();
     this.getAllMessages();
     Echo["private"]("Chat.".concat(this.friend.session.id)).listen('PrivateChatEvent', function (event) {
+      _this2.read();
+
       _this2.chats.push({
         message: event.content,
         type: 'received',
@@ -44101,6 +44121,12 @@ var render = function() {
                       _vm._s(friend.name) +
                       "\n                        "
                   ),
+                  friend.session && friend.session.unreadCount > 0
+                    ? _c("span", { staticClass: "text-danger" }, [
+                        _vm._v(_vm._s(friend.session.unreadCount))
+                      ])
+                    : _vm._e(),
+                  _vm._v(" "),
                   friend.online
                     ? _c("i", { staticClass: "fas fa-circle float-right" })
                     : _vm._e()

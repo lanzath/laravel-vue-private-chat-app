@@ -49,7 +49,7 @@ export default {
 
     methods: {
         send() {
-            if(this.message) {
+            if (this.message) {
                 this.pushToChats(this.message);
                 axios.post(`/session/${this.friend.session.id}/send`, {
                     content: this.message,
@@ -83,16 +83,23 @@ export default {
             axios
             .post(`/session/${this.friend.session.id}/chats`)
             .then(response => this.chats = response.data);
+        },
+
+        read() {
+            axios.post(`/session/${this.friend.session.id}/read`);
         }
     },
 
     created() {
+        this.read();
+
         this.getAllMessages();
 
         Echo
             .private(`Chat.${this.friend.session.id}`)
             .listen('PrivateChatEvent', event => {
-                this.chats.push({ message: event.content, type: 'received', sent_at: 'Just now' })
+                this.read();
+                this.chats.push({ message: event.content, type: 'received', sent_at: 'Just now' });
             })
     }
 };
