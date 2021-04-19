@@ -25,6 +25,8 @@ Route::post('session/{session}/chats', [App\Http\Controllers\ChatController::cla
 
 Route::post('session/{session}/send', [App\Http\Controllers\ChatController::class, 'send']);
 
+Route::post('session/{session}/read', [App\Http\Controllers\ChatController::class, 'read']);
+
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
