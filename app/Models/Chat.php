@@ -17,7 +17,12 @@ class Chat extends Model
      */
     protected $fillable = ['message_id', 'session_id', 'user_id', 'read_at', 'type'];
 
-
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $dates = ['read_at'];
 
     //-------------------------------------------
     // Relations
