@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use App\Http\Resources\ChatResource;
+use App\Events\MsgReadEvent;
 
 class ChatController extends Controller
 {
@@ -59,6 +60,9 @@ class ChatController extends Controller
 
         foreach ($chats as $chat) {
             $chat->update(['read_at' => now()]);
+
+            // Event broadcast for each read message
+            Broadcast(new MsgReadEvent(new ChatResource($chat), $chat->session_id));
         }
     }
 }
