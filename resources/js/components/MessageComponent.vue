@@ -18,7 +18,7 @@
             </div>
         </div>
         <div class="card-body" v-chat-scroll>
-            <p class="card-text" :class="{'text-right':chat.type == 'sender'}" v-for="chat in chats" :key="chat.id">
+            <p class="card-text" :class="{'text-right':chat.type == 'sender', 'text-success':chat.read_at != null}" v-for="chat in chats" :key="chat.id">
                 {{ chat.message }}
             </p>
         </div>
@@ -54,7 +54,7 @@ export default {
                 axios.post(`/session/${this.friend.session.id}/send`, {
                     content: this.message,
                     to_user: this.friend.id,
-                });
+                }).then(response => (this.chats[this.chats.length - 1].id = response.data));
                 this.message = null;
             }
         },
@@ -85,6 +85,7 @@ export default {
             .then(response => this.chats = response.data);
         },
 
+        // post request to back-end to fill read_at field.
         read() {
             axios.post(`/session/${this.friend.session.id}/read`);
         }
@@ -95,12 +96,24 @@ export default {
 
         this.getAllMessages();
 
+        // Listens to every private chat event.
         Echo
             .private(`Chat.${this.friend.session.id}`)
             .listen('PrivateChatEvent', event => {
-                this.read();
+                this.friend.session.open ? this.read() : '';
                 this.chats.push({ message: event.content, type: 'received', sent_at: 'Just now' });
-            })
+            });
+
+        // Listens to every Message Read Event.
+        Echo
+            .private(`Chat.${this.friend.session.id}`)
+            .listen('MsgReadEvent', event => {
+                this.chats.forEach(
+                  (chat, index) => {
+                    this.chats[index].read_at = chat.id === event.chat.id ? chat.read_at = event.chat.read_at : ''
+                  }
+                )
+            });
     }
 };
 </script>
