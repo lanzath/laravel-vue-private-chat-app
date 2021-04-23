@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Events\PrivateChatEvent;
 use App\Models\Session;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse;
+use App\Events\PrivateChatEvent;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\JsonResponse;
 use App\Http\Resources\ChatResource;
 use App\Events\MsgReadEvent;
 
@@ -30,7 +30,8 @@ class ChatController extends Controller
 
         broadcast(new PrivateChatEvent($message->content, $chat));
 
-        return response()->json($message, Response::HTTP_CREATED);
+        // Returns the sent message id to front-end
+        return response()->json($chat->id, Response::HTTP_CREATED);
     }
 
     /**
@@ -62,7 +63,7 @@ class ChatController extends Controller
             $chat->update(['read_at' => now()]);
 
             // Event broadcast for each read message
-            Broadcast(new MsgReadEvent(new ChatResource($chat), $chat->session_id));
+            broadcast(new MsgReadEvent(new ChatResource($chat), $chat->session_id));
         }
     }
 }
