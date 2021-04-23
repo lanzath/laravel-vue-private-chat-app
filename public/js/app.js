@@ -2032,11 +2032,15 @@ __webpack_require__.r(__webpack_exports__);
   },
   methods: {
     send: function send() {
+      var _this = this;
+
       if (this.message) {
         this.pushToChats(this.message);
         axios.post("/session/".concat(this.friend.session.id, "/send"), {
           content: this.message,
           to_user: this.friend.id
+        }).then(function (response) {
+          return _this.chats[_this.chats.length - 1].id = response.data;
         });
         this.message = null;
       }
@@ -2058,28 +2062,36 @@ __webpack_require__.r(__webpack_exports__);
       this.blocked = !this.blocked;
     },
     getAllMessages: function getAllMessages() {
-      var _this = this;
+      var _this2 = this;
 
       axios.post("/session/".concat(this.friend.session.id, "/chats")).then(function (response) {
-        return _this.chats = response.data;
+        return _this2.chats = response.data;
       });
     },
+    // post request to back-end to fill read_at field.
     read: function read() {
       axios.post("/session/".concat(this.friend.session.id, "/read"));
     }
   },
   created: function created() {
-    var _this2 = this;
+    var _this3 = this;
 
     this.read();
-    this.getAllMessages();
-    Echo["private"]("Chat.".concat(this.friend.session.id)).listen('PrivateChatEvent', function (event) {
-      _this2.read();
+    this.getAllMessages(); // Listens to every private chat event.
 
-      _this2.chats.push({
+    Echo["private"]("Chat.".concat(this.friend.session.id)).listen('PrivateChatEvent', function (event) {
+      _this3.friend.session.open ? _this3.read() : '';
+
+      _this3.chats.push({
         message: event.content,
         type: 'received',
         sent_at: 'Just now'
+      });
+    }); // Listens to every Message Read Event.
+
+    Echo["private"]("Chat.".concat(this.friend.session.id)).listen('MsgReadEvent', function (event) {
+      _this3.chats.forEach(function (chat, index) {
+        _this3.chats[index].read_at = chat.id === event.chat.id ? chat.read_at = event.chat.read_at : '';
       });
     });
   }
@@ -44276,7 +44288,10 @@ var render = function() {
           {
             key: chat.id,
             staticClass: "card-text",
-            class: { "text-right": chat.type == "sender" }
+            class: {
+              "text-right": chat.type == "sender",
+              "text-success": chat.read_at != null
+            }
           },
           [_vm._v("\n            " + _vm._s(chat.message) + "\n        ")]
         )
