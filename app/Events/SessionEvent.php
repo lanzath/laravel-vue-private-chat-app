@@ -12,8 +12,8 @@ class SessionEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $session;
-    public $session_by;
+    public object $session;
+    public int $session_by;
 
     /**
      * Create a new event instance.
