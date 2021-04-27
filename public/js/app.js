@@ -2021,6 +2021,8 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   props: ['friend'],
   data: function data() {
@@ -2049,6 +2051,7 @@ __webpack_require__.r(__webpack_exports__);
       this.chats.push({
         message: message,
         type: 'sender',
+        read_at: null,
         sent_at: 'Just Now'
       });
     },
@@ -44293,7 +44296,14 @@ var render = function() {
               "text-success": chat.read_at != null
             }
           },
-          [_vm._v("\n            " + _vm._s(chat.message) + "\n        ")]
+          [
+            _vm._v("\n            " + _vm._s(chat.message) + "\n            "),
+            _c("br"),
+            _vm._v(" "),
+            _c("span", { staticStyle: { "font-size": "8px" } }, [
+              _vm._v(_vm._s(chat.read_at))
+            ])
+          ]
         )
       }),
       0

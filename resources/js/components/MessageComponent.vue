@@ -20,6 +20,8 @@
         <div class="card-body" v-chat-scroll>
             <p class="card-text" :class="{'text-right':chat.type == 'sender', 'text-success':chat.read_at != null}" v-for="chat in chats" :key="chat.id">
                 {{ chat.message }}
+                <br>
+                <span style="font-size: 8px">{{ chat.read_at }}</span>
             </p>
         </div>
         <form class="card-footer" @submit.prevent="send">
@@ -63,6 +65,7 @@ export default {
             this.chats.push({
                 message: message,
                 type: 'sender',
+                read_at: null,
                 sent_at: 'Just Now'
             });
         },
