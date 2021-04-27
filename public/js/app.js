@@ -2059,16 +2059,20 @@ __webpack_require__.r(__webpack_exports__);
       this.$emit('close');
     },
     clear: function clear() {
-      this.chats = [];
+      var _this2 = this;
+
+      axios.post("/session/".concat(this.friend.session.id, "/clear")).then(function (response) {
+        return _this2.chats = [];
+      });
     },
     toggleBlock: function toggleBlock() {
       this.blocked = !this.blocked;
     },
     getAllMessages: function getAllMessages() {
-      var _this2 = this;
+      var _this3 = this;
 
       axios.post("/session/".concat(this.friend.session.id, "/chats")).then(function (response) {
-        return _this2.chats = response.data;
+        return _this3.chats = response.data;
       });
     },
     // post request to back-end to fill read_at field.
@@ -2077,15 +2081,15 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   created: function created() {
-    var _this3 = this;
+    var _this4 = this;
 
     this.read();
     this.getAllMessages(); // Listens to every private chat event.
 
     Echo["private"]("Chat.".concat(this.friend.session.id)).listen('PrivateChatEvent', function (event) {
-      _this3.friend.session.open ? _this3.read() : '';
+      _this4.friend.session.open ? _this4.read() : '';
 
-      _this3.chats.push({
+      _this4.chats.push({
         message: event.content,
         type: 'received',
         sent_at: 'Just now'
@@ -2093,8 +2097,8 @@ __webpack_require__.r(__webpack_exports__);
     }); // Listens to every Message Read Event.
 
     Echo["private"]("Chat.".concat(this.friend.session.id)).listen('MsgReadEvent', function (event) {
-      _this3.chats.forEach(function (chat, index) {
-        _this3.chats[index].read_at = chat.id === event.chat.id ? chat.read_at = event.chat.read_at : '';
+      _this4.chats.forEach(function (chat, index) {
+        _this4.chats[index].read_at = chat.id === event.chat.id ? chat.read_at = event.chat.read_at : '';
       });
     });
   }
@@ -44335,7 +44339,7 @@ var render = function() {
             attrs: {
               type: "text",
               placeholder: _vm.blocked
-                ? "You've bocked User Name :("
+                ? "You've bocked " + _vm.friend.name + " :("
                 : "Write your message",
               disabled: _vm.blocked
             },

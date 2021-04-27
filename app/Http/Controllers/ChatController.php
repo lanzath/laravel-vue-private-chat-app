@@ -66,4 +66,19 @@ class ChatController extends Controller
             broadcast(new MsgReadEvent(new ChatResource($chat), $chat->session_id));
         }
     }
+
+    /**
+     * Delete messages from requested user.
+     *
+     * @param  Session  $session
+     * @return JsonResponse
+     */
+    public function clear(Session $session): JsonResponse
+    {
+        $session->deleteChats();
+
+        $session->chats->count() == 0 ? $session->deleteMessages() : '';
+
+        return response()->json([], Response::HTTP_NO_CONTENT);
+    }
 }

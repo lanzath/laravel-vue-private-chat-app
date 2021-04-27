@@ -30,7 +30,7 @@
                     v-model="message"
                     type="text"
                     class="form-control"
-                    :placeholder="blocked ? 'You\'ve bocked User Name :(' : 'Write your message'"
+                    :placeholder="blocked ? `You\'ve bocked ${friend.name} :(` : 'Write your message'"
                     :disabled="blocked"
                 />
             </div>
@@ -75,7 +75,9 @@ export default {
         },
 
         clear() {
-            this.chats = [];
+            axios
+              .post(`/session/${this.friend.session.id}/clear`)
+              .then(response => (this.chats = []));
         },
 
         toggleBlock() {
@@ -84,8 +86,8 @@ export default {
 
         getAllMessages() {
             axios
-            .post(`/session/${this.friend.session.id}/chats`)
-            .then(response => this.chats = response.data);
+              .post(`/session/${this.friend.session.id}/chats`)
+              .then(response => this.chats = response.data);
         },
 
         // post request to back-end to fill read_at field.

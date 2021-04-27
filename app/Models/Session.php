@@ -18,11 +18,6 @@ class Session extends Model
      */
     protected $fillable = ['user1_id', 'user2_id'];
 
-
-    //-------------------------------------------
-    // Relations
-    //-------------------------------------------
-
     /**
      * Return session's chats via message.
      *
@@ -41,5 +36,25 @@ class Session extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    /**
+     * Delete chats from related table.
+     *
+     * @return void
+     */
+    public function deleteChats(): void
+    {
+        $this->chats()->where('user_id', auth()->id())->delete();
+    }
+
+    /**
+     * Delete messages from related table.
+     *
+     * @return void
+     */
+    public function deleteMessages(): void
+    {
+        $this->messages()->delete();
     }
 }
