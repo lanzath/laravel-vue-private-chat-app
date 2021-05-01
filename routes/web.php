@@ -29,6 +29,10 @@ Route::post('session/{session}/read', [App\Http\Controllers\ChatController::clas
 
 Route::post('session/{session}/clear', [App\Http\Controllers\ChatController::class, 'clear']);
 
+Route::post('session/{session}/block', [App\Http\Controllers\BlockController::class, 'block']);
+
+Route::post('session/{session}/unblock', [App\Http\Controllers\BlockController::class, 'unblock']);
+
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');

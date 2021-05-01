@@ -1,17 +1,20 @@
 <template>
     <div class="card card-default chat-box">
         <div class="card-header">
-            <b :class="{'text-danger':blocked}">
+            <b :class="{'text-danger':session.block}">
                 {{ friend.name }}
-                <span v-if="blocked">(blocked)</span>
+                <span v-if="session.block">(blocked)</span>
             </b>
             <i class="fas fa-times float-right" @click.prevent="close"></i>
 
             <div class="dropdown float-right">
                 <i class="fas fa-ellipsis-v mr-4" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
                 <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <a class="dropdown-item" href="#" @click.prevent="toggleBlock">
-                        {{ blocked ? 'Unblock' : 'Block' }}
+                    <a class="dropdown-item" href="#" v-if="session.block && canUnblock" @click.prevent="unblock">
+                        Unblock
+                    </a>
+                    <a class="dropdown-item" href="#" v-if="!session.block" @click.prevent="block">
+                        Block
                     </a>
                     <a class="dropdown-item" href="#" @click.prevent="clear">Clear chat</a>
                 </div>
@@ -30,8 +33,8 @@
                     v-model="message"
                     type="text"
                     class="form-control"
-                    :placeholder="blocked ? `You\'ve bocked ${friend.name} :(` : 'Write your message'"
-                    :disabled="blocked"
+                    :placeholder="session.block ? `Blocked session :(` : 'Write your message'"
+                    :disabled="session.block"
                 />
             </div>
         </form>
@@ -44,11 +47,18 @@ export default {
     data() {
         return {
             chats: [],
-            blocked: false,
             message: null,
         }
     },
+    computed: {
+        session() {
+            return this.friend.session;
+        },
 
+        canUnblock() {
+            return this.session.blocked_by == authId;
+        }
+    },
     methods: {
         send() {
             if (this.message) {
@@ -80,8 +90,19 @@ export default {
               .then(response => (this.chats = []));
         },
 
-        toggleBlock() {
-            this.blocked = !this.blocked;
+        block() {
+            // Getting session from computed
+            this.session.block = true;
+            axios
+              .post(`/session/${this.friend.session.id}/block`)
+              .then(response => this.session.blocked_by = authId);
+        },
+
+        unblock() {
+            this.session.block = false;
+            axios
+              .post(`/session/${this.friend.session.id}/unblock`)
+              .then(response => this.session.blocked_by = null);
         },
 
         getAllMessages() {
@@ -95,7 +116,6 @@ export default {
             axios.post(`/session/${this.friend.session.id}/read`);
         }
     },
-
     created() {
         this.read();
 
@@ -103,22 +123,27 @@ export default {
 
         // Listens to every private chat event.
         Echo
-            .private(`Chat.${this.friend.session.id}`)
-            .listen('PrivateChatEvent', event => {
-                this.friend.session.open ? this.read() : '';
-                this.chats.push({ message: event.content, type: 'received', sent_at: 'Just now' });
-            });
+          .private(`Chat.${this.friend.session.id}`)
+          .listen('PrivateChatEvent', event => {
+              this.friend.session.open ? this.read() : '';
+              this.chats.push({ message: event.content, type: 'received', sent_at: 'Just now' });
+          });
 
         // Listens to every Message Read Event.
         Echo
-            .private(`Chat.${this.friend.session.id}`)
-            .listen('MsgReadEvent', event => {
-                this.chats.forEach(
-                  (chat, index) => {
-                    this.chats[index].read_at = chat.id === event.chat.id ? chat.read_at = event.chat.read_at : ''
-                  }
-                )
-            });
+          .private(`Chat.${this.friend.session.id}`)
+          .listen('MsgReadEvent', event => {
+              this.chats.forEach(
+                (chat, index) => {
+                  this.chats[index].read_at = chat.id === event.chat.id ? chat.read_at = event.chat.read_at : ''
+                }
+              )
+          });
+
+        // Listens to every block/unblock event.
+        Echo
+          .private(`Chat.${this.friend.session.id}`)
+          .listen('BlockEvent', event => this.session.block = event.blocked);
     }
 };
 </script>

@@ -23,6 +23,8 @@ class SessionResource extends JsonResource
                 ->where('type', 'sender')
                 ->where('user_id', '!=', auth()->id())
                 ->count(),
+            'block' => !!$this->block,
+            'blocked_by' => $this->blocked_by
         ];
     }
 }

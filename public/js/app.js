@@ -2023,14 +2023,24 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
+//
+//
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   props: ['friend'],
   data: function data() {
     return {
       chats: [],
-      blocked: false,
       message: null
     };
+  },
+  computed: {
+    session: function session() {
+      return this.friend.session;
+    },
+    canUnblock: function canUnblock() {
+      return this.session.blocked_by == authId;
+    }
   },
   methods: {
     send: function send() {
@@ -2065,14 +2075,28 @@ __webpack_require__.r(__webpack_exports__);
         return _this2.chats = [];
       });
     },
-    toggleBlock: function toggleBlock() {
-      this.blocked = !this.blocked;
-    },
-    getAllMessages: function getAllMessages() {
+    block: function block() {
       var _this3 = this;
 
+      // Getting session from computed
+      this.session.block = true;
+      axios.post("/session/".concat(this.friend.session.id, "/block")).then(function (response) {
+        return _this3.session.blocked_by = authId;
+      });
+    },
+    unblock: function unblock() {
+      var _this4 = this;
+
+      this.session.block = false;
+      axios.post("/session/".concat(this.friend.session.id, "/unblock")).then(function (response) {
+        return _this4.session.blocked_by = null;
+      });
+    },
+    getAllMessages: function getAllMessages() {
+      var _this5 = this;
+
       axios.post("/session/".concat(this.friend.session.id, "/chats")).then(function (response) {
-        return _this3.chats = response.data;
+        return _this5.chats = response.data;
       });
     },
     // post request to back-end to fill read_at field.
@@ -2081,15 +2105,15 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   created: function created() {
-    var _this4 = this;
+    var _this6 = this;
 
     this.read();
     this.getAllMessages(); // Listens to every private chat event.
 
     Echo["private"]("Chat.".concat(this.friend.session.id)).listen('PrivateChatEvent', function (event) {
-      _this4.friend.session.open ? _this4.read() : '';
+      _this6.friend.session.open ? _this6.read() : '';
 
-      _this4.chats.push({
+      _this6.chats.push({
         message: event.content,
         type: 'received',
         sent_at: 'Just now'
@@ -2097,9 +2121,13 @@ __webpack_require__.r(__webpack_exports__);
     }); // Listens to every Message Read Event.
 
     Echo["private"]("Chat.".concat(this.friend.session.id)).listen('MsgReadEvent', function (event) {
-      _this4.chats.forEach(function (chat, index) {
-        _this4.chats[index].read_at = chat.id === event.chat.id ? chat.read_at = event.chat.read_at : '';
+      _this6.chats.forEach(function (chat, index) {
+        _this6.chats[index].read_at = chat.id === event.chat.id ? chat.read_at = event.chat.read_at : '';
       });
+    }); // Listens to every block/unblock event.
+
+    Echo["private"]("Chat.".concat(this.friend.session.id)).listen('BlockEvent', function (event) {
+      return _this6.session.block = event.blocked;
     });
   }
 });
@@ -44211,9 +44239,9 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c("div", { staticClass: "card card-default chat-box" }, [
     _c("div", { staticClass: "card-header" }, [
-      _c("b", { class: { "text-danger": _vm.blocked } }, [
+      _c("b", { class: { "text-danger": _vm.session.block } }, [
         _vm._v("\n            " + _vm._s(_vm.friend.name) + "\n            "),
-        _vm.blocked ? _c("span", [_vm._v("(blocked)")]) : _vm._e()
+        _vm.session.block ? _c("span", [_vm._v("(blocked)")]) : _vm._e()
       ]),
       _vm._v(" "),
       _c("i", {
@@ -44243,26 +44271,39 @@ var render = function() {
             attrs: { "aria-labelledby": "dropdownMenuButton" }
           },
           [
-            _c(
-              "a",
-              {
-                staticClass: "dropdown-item",
-                attrs: { href: "#" },
-                on: {
-                  click: function($event) {
-                    $event.preventDefault()
-                    return _vm.toggleBlock($event)
-                  }
-                }
-              },
-              [
-                _vm._v(
-                  "\n                    " +
-                    _vm._s(_vm.blocked ? "Unblock" : "Block") +
-                    "\n                "
+            _vm.session.block && _vm.canUnblock
+              ? _c(
+                  "a",
+                  {
+                    staticClass: "dropdown-item",
+                    attrs: { href: "#" },
+                    on: {
+                      click: function($event) {
+                        $event.preventDefault()
+                        return _vm.unblock($event)
+                      }
+                    }
+                  },
+                  [_vm._v("\n                    Unblock\n                ")]
                 )
-              ]
-            ),
+              : _vm._e(),
+            _vm._v(" "),
+            !_vm.session.block
+              ? _c(
+                  "a",
+                  {
+                    staticClass: "dropdown-item",
+                    attrs: { href: "#" },
+                    on: {
+                      click: function($event) {
+                        $event.preventDefault()
+                        return _vm.block($event)
+                      }
+                    }
+                  },
+                  [_vm._v("\n                    Block\n                ")]
+                )
+              : _vm._e(),
             _vm._v(" "),
             _c(
               "a",
@@ -44338,10 +44379,10 @@ var render = function() {
             staticClass: "form-control",
             attrs: {
               type: "text",
-              placeholder: _vm.blocked
-                ? "You've bocked " + _vm.friend.name + " :("
+              placeholder: _vm.session.block
+                ? "Blocked session :("
                 : "Write your message",
-              disabled: _vm.blocked
+              disabled: _vm.session.block
             },
             domProps: { value: _vm.message },
             on: {
