@@ -17,6 +17,8 @@ class CreateSessionsTable extends Migration
             $table->id();
             $table->foreignId('user1_id')->constrained('users');
             $table->foreignId('user2_id')->constrained('users');
+            $table->boolean('block')->default(0);
+            $table->foreignId('blocked_by')->nullable();
             $table->timestamps();
         });
     }
