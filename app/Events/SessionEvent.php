@@ -20,7 +20,7 @@ class SessionEvent implements ShouldBroadcast
      *
      * @return void
      */
-    public function __construct($session, $session_by)
+    public function __construct(object $session, int $session_by)
     {
         $this->session = $session;
         $this->session_by = $session_by;

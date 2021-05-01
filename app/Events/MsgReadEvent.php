@@ -20,7 +20,7 @@ class MsgReadEvent implements ShouldBroadcast
      *
      * @return void
      */
-    public function __construct($chat, $session_id)
+    public function __construct(object $chat, int $session_id)
     {
         $this->chat = $chat;
         $this->session_id = $session_id;
