@@ -57,4 +57,32 @@ class Session extends Model
     {
         $this->messages()->delete();
     }
+
+    /**
+     * Set block and blocked_by fields on Database.
+     *
+     * @return Session
+     */
+    public function block(): Session
+    {
+        $this->block = true;
+        $this->blocked_by = auth()->id();
+        $this->save();
+
+        return $this;
+    }
+
+    /**
+     * Unset block and blocked_by fields on Database.
+     *
+     * @return Session
+     */
+    public function unblock(): Session
+    {
+        $this->block = false;
+        $this->blocked_by = null;
+        $this->save();
+
+        return $this;
+    }
 }
